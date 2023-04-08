@@ -4,7 +4,9 @@
  */
 package com.irfaan.learninggrpc.client;
 
-import com.irfaan.learning.javagrpc.DummyServiceGrpc;
+import com.proto.greet.GreetRequest;
+import com.proto.greet.GreetServiceGrpc;
+import com.proto.greet.Greeting;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
@@ -23,12 +25,29 @@ public class GreetingClient {
                 .build();
 
         System.out.println("Creating stub");
-        DummyServiceGrpc.DummyServiceBlockingStub syncClient = DummyServiceGrpc.newBlockingStub(channel);
+//        DummyServiceGrpc.DummyServiceBlockingStub syncClient = DummyServiceGrpc.newBlockingStub(channel);
 
 //        DummyServiceGrpc.DummyServiceFutureStub asyncClient = DummyServiceGrpc.newFutureStub(channel);
 //        Integer maxInboundMessageSize = syncClient.getCallOptions().getMaxInboundMessageSize();
-        System.out.println(syncClient.getChannel());
-        System.out.println("Shutting down channel");
-//        channel.shutdown();
+
+        //created a greet service client(blocking - synchronous)
+        GreetServiceGrpc.GreetServiceBlockingStub greetClient = GreetServiceGrpc.newBlockingStub(channel);
+
+        //created a protocol buffer greeting message
+        var greeting = Greeting.newBuilder()
+                .setFirstName("Ahmad Irfaan")
+                .setLastName("Hibatullah")
+                .build();
+        var greetRequest = GreetRequest.newBuilder()
+                .setGreeting(greeting)
+                .build();
+
+        //call the RPC and get back
+        var greetResponse = greetClient.greet(greetRequest);
+        System.out.println(greetResponse.getResult());
+
+        //shut down channel
+        System.out.println("Shutting down Channel");
+        channel.shutdown();
     }
 }
