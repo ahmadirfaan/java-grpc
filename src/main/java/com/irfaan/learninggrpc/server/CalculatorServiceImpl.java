@@ -4,9 +4,7 @@
  */
 package com.irfaan.learninggrpc.server;
 
-import com.proto.calculator.CalculatorServiceGrpc;
-import com.proto.calculator.SumRequest;
-import com.proto.calculator.SumResponse;
+import com.proto.calculator.*;
 import io.grpc.stub.StreamObserver;
 
 /**
@@ -22,6 +20,23 @@ public class CalculatorServiceImpl extends CalculatorServiceGrpc.CalculatorServi
                 .build();
 
         responseObserver.onNext(response);
+
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void primNumberDecomposition(PrimeNumberDecompositionRequest request, StreamObserver<PrimeNumberDecompositionResponse> responseObserver) {
+        long number = request.getNumber();
+        long divisior = 2;
+        while (number > 1) {
+            if (number % divisior == 0) {
+                number = number / divisior;
+                responseObserver.onNext(PrimeNumberDecompositionResponse.newBuilder()
+                        .setPrimeFactor(divisior).build());
+            } else {
+                divisior += 1;
+            }
+        }
 
         responseObserver.onCompleted();
     }
