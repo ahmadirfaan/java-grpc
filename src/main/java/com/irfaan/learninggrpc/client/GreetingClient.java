@@ -4,11 +4,11 @@
  */
 package com.irfaan.learninggrpc.client;
 
-import com.proto.greet.GreetRequest;
-import com.proto.greet.GreetServiceGrpc;
-import com.proto.greet.Greeting;
+import com.proto.greet.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+
+import java.util.Iterator;
 
 /**
  * @author irfaanhibatullah
@@ -45,6 +45,14 @@ public class GreetingClient {
         //call the RPC and get back
         var greetResponse = greetClient.greet(greetRequest);
         System.out.println(greetResponse.getResult());
+
+        var greetManyTimesRequest = GreetManyTimesRequest.newBuilder()
+                .setGreeting(greeting)
+                .build();
+
+        //streaming API gRPC
+        Iterator<GreetManyTimesResponse> responseIterator = greetClient.greetManyTimes(greetManyTimesRequest);
+        responseIterator.forEachRemaining(response -> System.out.println(response.getResult()));
 
         //shut down channel
         System.out.println("Shutting down Channel");

@@ -4,9 +4,7 @@
  */
 package com.irfaan.learninggrpc.server;
 
-import com.proto.greet.GreetRequest;
-import com.proto.greet.GreetResponse;
-import com.proto.greet.GreetServiceGrpc;
+import com.proto.greet.*;
 import io.grpc.stub.StreamObserver;
 
 /**
@@ -32,5 +30,29 @@ public class GreetServiceImpl extends GreetServiceGrpc.GreetServiceImplBase {
 
         //complete the RPC Call
         responseObserver.onCompleted();
+    }
+
+    @Override
+    public void greetManyTimes(GreetManyTimesRequest request, StreamObserver<GreetManyTimesResponse> responseObserver) {
+
+        var firstName = request.getGreeting().getFirstName();
+        var lastName = request.getGreeting().getLastName();
+
+
+        try {
+            for (int i = 0; i < 10; i++) {
+                var result = String.format("Hello %s %s, response number %s", firstName, lastName, i);
+                var response = GreetManyTimesResponse.newBuilder()
+                        .setResult(result)
+                        .build();
+                responseObserver.onNext(response);
+                Thread.sleep(1000L);
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            responseObserver.onCompleted();
+        }
+
     }
 }
