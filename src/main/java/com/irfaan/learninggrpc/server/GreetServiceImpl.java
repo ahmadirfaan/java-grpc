@@ -5,6 +5,7 @@
 package com.irfaan.learninggrpc.server;
 
 import com.proto.greet.*;
+import io.grpc.Context;
 import io.grpc.stub.StreamObserver;
 
 /**
@@ -110,5 +111,33 @@ public class GreetServiceImpl extends GreetServiceGrpc.GreetServiceImplBase {
                 responseObserver.onCompleted();
             }
         };
+    }
+
+    @Override
+    public void greetWithDeadline(GreetWithDeadlineRequest request, StreamObserver<GreetWithDeadlineResponse> responseObserver) {
+
+        Context current = Context.current();
+
+        for (int i = 0; i < 3; i++) {
+            if(!current.isCancelled()) {
+                try {
+                    System.out.println("sleep for 100ms");
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            } else {
+                return;
+            }
+
+        }
+
+        System.out.println("send response");
+        responseObserver.onNext(GreetWithDeadlineResponse
+                .newBuilder()
+                .setResult("Hello " + request.getGreeting().getFirstName() + " " + request.getGreeting().getLastName())
+                .build());
+
+        responseObserver.onCompleted();
     }
 }

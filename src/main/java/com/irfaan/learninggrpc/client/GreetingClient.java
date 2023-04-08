@@ -6,8 +6,7 @@ package com.irfaan.learninggrpc.client;
 
 import com.irfaan.learning.javagrpc.DummyServiceGrpc;
 import com.proto.greet.*;
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
+import io.grpc.*;
 import io.grpc.stub.StreamObserver;
 
 import java.util.Arrays;
@@ -45,13 +44,38 @@ public class GreetingClient {
 //        doUnaryCall(channel);
 //        doServerStreamingCall(channel);
 //        doClientStreamingCall(channel);
-        doBiDiStreamingCall(channel);
+//        doBiDiStreamingCall(channel);
+        doUnaryCallWithDeadline(channel);
 
 
         //shut down channel
         System.out.println("Shutting down Channel");
 
         channel.shutdown();
+    }
+
+    private void doUnaryCallWithDeadline(ManagedChannel channel) {
+        var stub = GreetServiceGrpc.newBlockingStub(channel);
+
+        //first call (500 ms deadline)
+        try {
+            System.out.println("sending a request with a deadline of 500 ms");
+            var greetWithDeadlineResponse = stub.withDeadline(Deadline.after(800, TimeUnit.MILLISECONDS))
+                    .greetWithDeadline(GreetWithDeadlineRequest
+                            .newBuilder()
+                            .setGreeting(Greeting.newBuilder()
+                                    .setFirstName("Ahmad")
+                                    .setLastName("Irfaan")
+                                    .build())
+                            .build());
+            System.out.println("result: " + greetWithDeadlineResponse.getResult());
+        } catch (StatusRuntimeException e) {
+            if (e.getStatus() == Status.DEADLINE_EXCEEDED) {
+                System.out.println("Deadline has been exceeded, we don't want the response");
+            } else {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void doBiDiStreamingCall(ManagedChannel channel) {
