@@ -4,11 +4,15 @@
  */
 package com.irfaan.learninggrpc.client;
 
+import com.irfaan.learning.javagrpc.DummyServiceGrpc;
 import com.proto.greet.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.stub.StreamObserver;
 
 import java.util.Iterator;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author irfaanhibatullah
@@ -16,16 +20,121 @@ import java.util.Iterator;
  */
 public class GreetingClient {
 
+    ManagedChannel channel;
+
+
     public static void main(String[] args) {
         System.out.println("Hello I'm a gRPC client");
 
-        ManagedChannel channel = ManagedChannelBuilder
+        GreetingClient client = new GreetingClient();
+        client.run();
+
+        System.out.println("Creating stub");
+//
+    }
+
+
+    public void run() {
+        channel = ManagedChannelBuilder
                 .forAddress("localhost", 12200)
                 .usePlaintext()
                 .build();
+//
+//        doUnaryCall(channel);
+//        doServerStreamingCall(channel);
+        doClientStreamingCall(channel);
 
-        System.out.println("Creating stub");
-//        DummyServiceGrpc.DummyServiceBlockingStub syncClient = DummyServiceGrpc.newBlockingStub(channel);
+
+        //shut down channel
+        System.out.println("Shutting down Channel");
+
+        channel.shutdown();
+    }
+
+    private void doClientStreamingCall(ManagedChannel channel) {
+        GreetServiceGrpc.GreetServiceStub greetServiceStub = GreetServiceGrpc.newStub(channel);
+
+        CountDownLatch latch = new CountDownLatch(1);
+        var longGreetRequestStreamObserver = greetServiceStub.longGreet(new StreamObserver<LongGreetResponse>() {
+            @Override
+            public void onNext(LongGreetResponse value) {
+                //we get a response from  the server
+                System.out.println("Received a response from the server");
+                System.out.println(value.getResult());
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                //we get an error from the server
+
+            }
+
+            @Override
+            public void onCompleted() {
+                //the server is done sending us data
+                //onCompleted will be called right after onNext()
+                System.out.println("Server has completed sending us something");
+                latch.countDown();
+            }
+        });
+
+        System.out.println("sending message 1");
+        //streaming message #1
+        longGreetRequestStreamObserver.onNext(LongGreetRequest
+                .newBuilder()
+                .setGreeting(Greeting.newBuilder()
+                        .setFirstName("Ahmad")
+                        .setLastName("Irfaan"))
+                .build());
+
+        System.out.println("sending message 2");
+        //streaming message #2
+        longGreetRequestStreamObserver.onNext(LongGreetRequest
+                .newBuilder()
+                .setGreeting(Greeting.newBuilder()
+                        .setFirstName("Tuti ")
+                        .setLastName("Wulandari"))
+                .build());
+
+        System.out.println("sending message 3");
+        //streaming message #3
+        longGreetRequestStreamObserver.onNext(LongGreetRequest
+                .newBuilder()
+                .setGreeting(Greeting.newBuilder()
+                        .setFirstName("Ahmad")
+                        .setLastName("Afiif"))
+                .build());
+
+        //we tell the server that the client is done sending the data
+        longGreetRequestStreamObserver.onCompleted();;
+
+        try {
+            latch.await(3L, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private void doServerStreamingCall(ManagedChannel channel) {
+        GreetServiceGrpc.GreetServiceBlockingStub greetClient = GreetServiceGrpc.newBlockingStub(channel);
+
+        var greeting = Greeting.newBuilder()
+                .setFirstName("Ahmad Irfaan")
+                .setLastName("Hibatullah")
+                .build();
+
+        var greetManyTimesRequest = GreetManyTimesRequest.newBuilder()
+                .setGreeting(greeting)
+                .build();
+
+        //streaming API gRPC
+        Iterator<GreetManyTimesResponse> responseIterator = greetClient.greetManyTimes(greetManyTimesRequest);
+        responseIterator.forEachRemaining(response -> System.out.println(response.getResult()));
+    }
+
+    private void doUnaryCall(ManagedChannel channel) {
+        DummyServiceGrpc.DummyServiceBlockingStub syncClient = DummyServiceGrpc.newBlockingStub(channel);
 
 //        DummyServiceGrpc.DummyServiceFutureStub asyncClient = DummyServiceGrpc.newFutureStub(channel);
 //        Integer maxInboundMessageSize = syncClient.getCallOptions().getMaxInboundMessageSize();
@@ -45,17 +154,5 @@ public class GreetingClient {
         //call the RPC and get back
         var greetResponse = greetClient.greet(greetRequest);
         System.out.println(greetResponse.getResult());
-
-        var greetManyTimesRequest = GreetManyTimesRequest.newBuilder()
-                .setGreeting(greeting)
-                .build();
-
-        //streaming API gRPC
-        Iterator<GreetManyTimesResponse> responseIterator = greetClient.greetManyTimes(greetManyTimesRequest);
-        responseIterator.forEachRemaining(response -> System.out.println(response.getResult()));
-
-        //shut down channel
-        System.out.println("Shutting down Channel");
-        channel.shutdown();
     }
 }
