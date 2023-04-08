@@ -34,8 +34,6 @@ public class CalculatorClient {
                 .build();
 
 
-
-
 //        doUnaryCall(channel);
 //        doStreamingServerCall(channel);
         doClientStreamingCall(channel);
