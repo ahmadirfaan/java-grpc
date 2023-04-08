@@ -9,7 +9,9 @@ import java.io.IOException;
 public class GreetingServer {
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        Server server = ServerBuilder.forPort(12200).build();
+        Server server = ServerBuilder.forPort(12200)
+                .addService(new GreetServiceImpl())
+                .build();
         server.start();
         System.out.println("Server Start");
 
