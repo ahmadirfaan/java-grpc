@@ -5,10 +5,17 @@
 package com.irfaan.learninggrpc.client;
 
 import com.proto.calculator.*;
+import com.proto.greet.GreetEveryoneRequest;
+import com.proto.greet.GreetEveryoneResponse;
+import com.proto.greet.GreetServiceGrpc;
+import com.proto.greet.Greeting;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -36,12 +43,62 @@ public class CalculatorClient {
 
 //        doUnaryCall(channel);
 //        doStreamingServerCall(channel);
-        doClientStreamingCall(channel);
+//        doClientStreamingCall(channel);
+        doBiDiStreamingCall(channel);
+
 
         //shut down channel
         System.out.println("Shutting down Channel");
         channel.shutdown();
 
+    }
+
+    private void doBiDiStreamingCall(ManagedChannel channel) {
+        var greetServiceStub = CalculatorServiceGrpc.newStub(channel);
+
+        var latch = new CountDownLatch(1);
+
+        var requestObserver = greetServiceStub.findMaximum(new StreamObserver<>() {
+            @Override
+            public void onNext(FindMaximumResponse value) {
+                System.out.println("Get a new maxium from server : " + value.getMaximum());
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                latch.countDown();
+            }
+
+            @Override
+            public void onCompleted() {
+                System.out.println("Server is done sending messages");
+                latch.countDown();
+            }
+        });
+
+
+        for (int i = 0; i < 200; i++) {
+            var random = new Random();
+            long value = random.nextLong();
+            System.out.println("Send message: " + (i + 1) + " ,value : " + value);
+            requestObserver.onNext(FindMaximumRequest
+                    .newBuilder()
+                    .setNumber(value)
+                    .build());
+            try {
+                Thread.sleep(100L);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        requestObserver.onCompleted();
+
+        try {
+            latch.await(3L, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     private void doClientStreamingCall(ManagedChannel channel) {

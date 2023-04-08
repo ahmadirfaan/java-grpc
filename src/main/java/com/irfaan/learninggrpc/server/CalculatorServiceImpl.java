@@ -71,4 +71,43 @@ public class CalculatorServiceImpl extends CalculatorServiceGrpc.CalculatorServi
             }
         };
     }
+
+    @Override
+    public StreamObserver<FindMaximumRequest> findMaximum(StreamObserver<FindMaximumResponse> responseObserver) {
+        return new StreamObserver<>() {
+
+            long currentMaximum = 0;
+
+            @Override
+            public void onNext(FindMaximumRequest value) {
+                long currentNumber = value.getNumber();
+                if (currentNumber > currentMaximum) {
+                    currentMaximum = currentNumber;
+                    responseObserver.onNext(
+                            FindMaximumResponse
+                                    .newBuilder()
+                                    .setMaximum(currentNumber)
+                                    .build()
+                    );
+                }
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                responseObserver.onCompleted();
+            }
+
+            @Override
+            public void onCompleted() {
+                //send the current last Maximum
+                responseObserver.onNext(FindMaximumResponse
+                        .newBuilder()
+                        .setMaximum(currentMaximum)
+                        .build());
+
+                //the server has done sending the data
+                responseObserver.onCompleted();
+            }
+        };
+    }
 }
