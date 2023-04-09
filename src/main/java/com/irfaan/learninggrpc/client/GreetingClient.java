@@ -7,8 +7,12 @@ package com.irfaan.learninggrpc.client;
 import com.irfaan.learning.javagrpc.DummyServiceGrpc;
 import com.proto.greet.*;
 import io.grpc.*;
+import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
+import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import io.grpc.stub.StreamObserver;
 
+import javax.net.ssl.SSLException;
+import java.io.File;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -24,7 +28,7 @@ public class GreetingClient {
     ManagedChannel channel;
 
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SSLException {
         System.out.println("Hello I'm a gRPC client");
 
         GreetingClient client = new GreetingClient();
@@ -35,17 +39,26 @@ public class GreetingClient {
     }
 
 
-    public void run() {
-        channel = ManagedChannelBuilder
-                .forAddress("localhost", 12200)
-                .usePlaintext()
-                .build();
+    public void run() throws SSLException {
+
+        //no use TLS
+//        channel = ManagedChannelBuilder
+//                .forAddress("localhost", 12200)
+//                .usePlaintext()
+//                .build();
+
+        var trustCertCollectionFile = new File("ssl/ca.crt");
+        channel = NettyChannelBuilder.forAddress( "localhost", 12200)
+                .sslContext(GrpcSslContexts.forClient()
+                        .trustManager(
+                                trustCertCollectionFile).build()
+                ).build();
 //
-//        doUnaryCall(channel);
+        doUnaryCall(channel);
 //        doServerStreamingCall(channel);
 //        doClientStreamingCall(channel);
 //        doBiDiStreamingCall(channel);
-        doUnaryCallWithDeadline(channel);
+//        doUnaryCallWithDeadline(channel);
 
 
         //shut down channel

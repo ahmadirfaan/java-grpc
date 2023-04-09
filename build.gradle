@@ -27,7 +27,8 @@ dependencies {
 
     //grpc
     implementation 'com.google.protobuf:protobuf-javalite:3.16.3'
-    implementation 'io.grpc:grpc-netty-shaded:1.27.2'
+
+    implementation 'io.grpc:grpc-netty-shaded:1.27.2' //use shaded is includes he ssl libraries
     implementation 'io.grpc:grpc-protobuf:1.27.2'
     implementation 'io.grpc:grpc-stub:1.27.2'
 
