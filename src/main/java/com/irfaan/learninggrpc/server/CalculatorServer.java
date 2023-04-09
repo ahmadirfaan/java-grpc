@@ -6,6 +6,7 @@ package com.irfaan.learninggrpc.server;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.grpc.protobuf.services.ProtoReflectionService;
 
 import java.io.IOException;
 
@@ -16,11 +17,14 @@ import java.io.IOException;
 public class CalculatorServer {
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        Server server = ServerBuilder.forPort(12201)
+        Server server = ServerBuilder.
+                forPort(52200)
                 .addService(new CalculatorServiceImpl())
+                .addService(ProtoReflectionService.newInstance()) //for reflection
                 .build();
 
         server.start();
+        System.out.println(server.getListenSockets());
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("Received Shutdown Request");

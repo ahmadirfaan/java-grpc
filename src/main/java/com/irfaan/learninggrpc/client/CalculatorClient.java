@@ -5,17 +5,11 @@
 package com.irfaan.learninggrpc.client;
 
 import com.proto.calculator.*;
-import com.proto.greet.GreetEveryoneRequest;
-import com.proto.greet.GreetEveryoneResponse;
-import com.proto.greet.GreetServiceGrpc;
-import com.proto.greet.Greeting;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -42,11 +36,11 @@ public class CalculatorClient {
                 .build();
 
 
-//        doUnaryCall(channel);
+        doUnaryCall(channel);
 //        doStreamingServerCall(channel);
 //        doClientStreamingCall(channel);
 //        doBiDiStreamingCall(channel);
-        doErrorCall(channel);
+//        doErrorCall(channel);
 
 
         //shut down channel
